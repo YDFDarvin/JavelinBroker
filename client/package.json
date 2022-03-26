@@ -1,0 +1,14 @@
+{
+  "name": "PingPongClient",
+  "version": "1.0.0",
+  "description": "Javelin Broker is a TCP/IP Ping-Pong client",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Serhii Andrukh",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io-client": "^4.4.1"
+  }
+}
