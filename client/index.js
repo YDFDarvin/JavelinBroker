@@ -18,10 +18,10 @@ socket.on("connect", () => {
     console.log('my connection id: ', socket.id);
 });
 
-socket.io.on('ping', (...args) => {
-    socket.emit('produce', { topic: 'topicName', message: {} });
-})
-
 socket.on('consume', (...args) => {
     console.log('consume handler: ', args)
 })
+
+socket.io.on('ping', (...args) => {
+    socket.emit('produce', { topic: 'topicName', message: { date: new Date().toUTCString(), ctx: 'context' } });
+});
