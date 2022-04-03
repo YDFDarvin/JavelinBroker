@@ -1,6 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { TopicGateway } from './topic.gateway';
 import { TopicService } from './topic.service';
+import { Test, TestingModule } from '@nestjs/testing';
 
 describe('TopicGateway', () => {
   let gateway: TopicGateway;

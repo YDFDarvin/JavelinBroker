@@ -1,4 +1,12 @@
 export enum GLOBAL_EVENT {
-  Consume = 'consume',
-  Produce = 'produce',
+  CONSUME = 'consume',
+  PRODUCE = 'produce',
+}
+
+export enum TOPIC_EVENTS {
+  CREATE = 'createTopic',
+  GET = 'findTopic',
+  GET_ALL = 'findAllTopic',
+  UPDATE = 'updateTopic',
+  DELETE = 'deleteTopic',
 }

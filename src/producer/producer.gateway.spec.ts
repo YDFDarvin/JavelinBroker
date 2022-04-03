@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { ProducerGateway } from './producer.gateway';
+import { Test, TestingModule } from '@nestjs/testing';
 
 describe('ProducerGateway', () => {
   let gateway: ProducerGateway;

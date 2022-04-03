@@ -4,6 +4,5 @@
   "semi": true,
   "printWidth": 80,
   "arrowParens": "always",
-  "tabWidth": 2,
-  "importOrder": ["^@nestjs/(.*)$", "^@broker/(.*)$", "^[./]"]
+  "tabWidth": 2
 }
