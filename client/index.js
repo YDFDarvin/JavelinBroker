@@ -4,7 +4,6 @@ const TOPIC_EVENTS = {
   CREATE: 'createTopic',
   GET: 'findTopic',
   GET_ALL: 'findAllTopic',
-  UPDATE: 'updateTopic',
   DELETE: 'deleteTopic',
 };
 
@@ -27,24 +26,33 @@ socket.on('connect', () => {
 });
 
 socket.on('consume', (...args) => {
-  console.log('consume handler: ', args);
+  console.log('consume: ', ...args);
+});
+
+socket.on('exception', (...args) => {
+  console.log('exception: ', ...args);
+});
+
+socket.on(TOPIC_EVENTS.GET, (...args) => {
+  console.log(TOPIC_EVENTS.GET, ...args);
+});
+socket.on(TOPIC_EVENTS.GET_ALL, (...args) => {
+  console.log(TOPIC_EVENTS.GET_ALL, ...args);
 });
 
 socket.io.on('ping', (...args) => {
-  socket.emit('produce', {
+  /*  socket.emit('produce', {
     topic: 'topicName',
     message: { date: new Date().toUTCString(), ctx: 'context' },
-  });
-
+  });*/
+  //emitTopicsCrud();
+  console.log('PING');
   socket.emit(TOPIC_EVENTS.CREATE, {
-    topic: 'topicName',
-    params: { partitions: 3, replicas: 0 },
+    topic: 'topic1',
+    params: { partitions: 3, retention: 5, replicas: 0 },
   });
-  socket.emit(TOPIC_EVENTS.GET, { topic: 'topicName' });
-  socket.emit(TOPIC_EVENTS.GET_ALL);
-  socket.emit(TOPIC_EVENTS.UPDATE, {
-    topic: 'topicName',
-    params: { partitions: 3, replicas: 0 },
+  socket.emit(TOPIC_EVENTS.CREATE, {
+    topic: 'topic2',
+    params: { partitions: 2, retention: 10, replicas: 0 },
   });
-  socket.emit(TOPIC_EVENTS.DELETE, { topic: 'topicName' });
 });
