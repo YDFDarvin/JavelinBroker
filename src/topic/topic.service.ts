@@ -1,27 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTopicDto } from './dto/create-topic.dto';
-import { UpdateTopicDto } from './dto/update-topic.dto';
-import { TopicModel } from './models/topic.model';
+import { PartitionService } from '../partition/partition.service';
 
 @Injectable()
 export class TopicService {
-  create(createTopicDto: CreateTopicDto): CreateTopicDto {
-    return createTopicDto;
+  // <T, V> - T is a type of key, V is an array type of partition keys
+  private topics: Map<string, string[]>;
+
+/*  constructor() {
+    this.topics = new Map();
   }
 
-  findAll() {
-    return `This action returns all topic`;
+  create(createTopicDto: CreateTopicDto) {
+    const { topic, params } = createTopicDto;
+
+    if (this.topics.has(topic)) throw Error('Topic already exists');
+
+    //PartitionService.create(topic, params.partitions);
+
+    //return Array.from(this.topics.set(topic, PartitionService.getTopicsPartitions(topic, params.partitions)).entries());
   }
 
-  findOne(key: string) {
-    return `This action returns a #${key} topic`;
+  getAll() {
+    return Array.from(this.topics.keys());
   }
 
-  update(id: number, updateTopicDto: UpdateTopicDto) {
-    return `This action updates a #${id} topic`;
+  findByKey(key: string) {
+    return { topic: key, partitions: this.topics.get(key) };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} topic`;
-  }
+  remove(key: string) {
+    for (const partition of this.topics.get(key)) {
+      //if (!PartitionService.delete(partition)) return false;
+    }
+
+    return this.topics.delete(key);
+  }*/
 }
