@@ -7,6 +7,5 @@ export enum TOPIC_EVENTS {
   CREATE = 'createTopic',
   GET = 'findTopic',
   GET_ALL = 'findAllTopic',
-  UPDATE = 'updateTopic',
   DELETE = 'deleteTopic',
 }

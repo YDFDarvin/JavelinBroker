@@ -1,6 +1,7 @@
 export interface IBrokerHeader {
   // Stored at partitions
   partitions: any[] | any;
+  retention: number;
   // Has a backup
   hasReplicas: boolean;
   // Number of replication Brokers
