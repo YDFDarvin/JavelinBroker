@@ -1,11 +1,14 @@
 import { WebSocketGateway, SubscribeMessage, MessageBody, WsResponse } from '@nestjs/websockets';
+import { UseFilters } from '@nestjs/common';
 import { GLOBAL_EVENT, TOPIC_EVENTS, WsResponseBody } from '@broker/common';
 import { TopicService } from './topic.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { TopicModel } from './models/topic.model';
 import { DeleteTopicDto } from './dto/delete-topic.dto';
 import { GetTopicDto } from './dto/get-topic.dto';
+import { RootExceptionFilter } from '../errors/base-exception-filter';
 
+@UseFilters(RootExceptionFilter)
 @WebSocketGateway()
 export class TopicGateway {
   constructor(private readonly topicService: TopicService) {}
