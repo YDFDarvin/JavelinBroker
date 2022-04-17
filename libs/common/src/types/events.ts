@@ -6,6 +6,5 @@ export enum GLOBAL_EVENT {
 export enum TOPIC_EVENTS {
   CREATE = 'createTopic',
   GET = 'findTopic',
-  GET_ALL = 'findAllTopic',
   DELETE = 'deleteTopic',
 }

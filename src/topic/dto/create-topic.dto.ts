@@ -1,4 +1,11 @@
-import { TopicModel } from '../models/topic.model';
-import { OmitType } from '@nestjs/mapped-types';
+import { Topic, TopicModelParams } from '../models/topic.model';
 
-export class CreateTopicDto extends TopicModel {}
+export class CreateTopicDto implements Omit<Topic, 'partitions'> {
+  params: TopicModelParams;
+  topic: string;
+
+  constructor(topic: string, params: TopicModelParams) {
+    this.topic = topic;
+    this.params = params;
+  }
+}
