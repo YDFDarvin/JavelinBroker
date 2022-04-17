@@ -1,4 +1,5 @@
 const { Manager } = require('socket.io-client');
+const crypto = require('crypto');
 
 const TOPIC_EVENTS = {
   CREATE: 'createTopic',
@@ -23,43 +24,41 @@ manager.open((err) => {
 
 socket.on('connect', () => {
   console.log('my connection id: ', socket.id);
+  socket.emit(TOPIC_EVENTS.CREATE, {
+    topic: 'messages',
+    params: { partitions: 3, retention: 5, replicas: 0 },
+  });
+  /*  socket.emit(TOPIC_EVENTS.CREATE, {
+    topic: 'users',
+    params: { partitions: 2, retention: 10, replicas: 0 },
+  });*/
+  socket.emit(TOPIC_EVENTS.GET_ALL);
 });
 
-socket.on('consume', (...args) => {
-  console.log('consume: ', ...args);
+socket.on('consume', (args) => {
+  console.log('\n\nConsumed EVENT: ', args.event);
+  console.log('Consumed Request: ', args.request);
+  console.log('Consumed Result: ', args.result);
+
+  if (Array.isArray(args.result)) {
+    const topic = args.result?.find((topic) => topic.topic === 'messages');
+    const partitions = topic.partitions?.map((partition) =>
+      JSON.parse(Buffer.from(partition, 'base64').toString('utf8')),
+    );
+    console.log('Partitions: ', partitions);
+  }
 });
 
 socket.on('exception', (...args) => {
   console.log('exception: ', ...args);
 });
 
-socket.on(TOPIC_EVENTS.GET, (...args) => {
-  console.log(TOPIC_EVENTS.GET, ...args);
-});
-socket.on(TOPIC_EVENTS.GET_ALL, (...args) => {
-  console.log(TOPIC_EVENTS.GET_ALL, ...args);
-});
-
 socket.io.on('ping', (...args) => {
-  /*  socket.emit('produce', {
-    topic: 'topicName',
-    message: { date: new Date().toUTCString(), ctx: 'context' },
-  });*/
-  //emitTopicsCrud();
   console.log('PING');
-  socket.emit(TOPIC_EVENTS.CREATE, {
-    topic: 'topic1',
-    params: { partitions: 3, retention: 5, replicas: 0 },
-  });
-  socket.emit(TOPIC_EVENTS.CREATE, {
-    topic: 'topic2',
-    params: { partitions: 2, retention: 10, replicas: 0 },
-  });
-  socket.emit(TOPIC_EVENTS.GET, {
-    topic: 'topic2',
+
+  socket.emit('produce', {
+    topic: 'messages',
+    message: crypto.randomBytes(20).toString('hex'),
   });
   socket.emit(TOPIC_EVENTS.GET_ALL);
-  socket.emit(TOPIC_EVENTS.DELETE, {
-    topic: 'topic1',
-  });
 });
