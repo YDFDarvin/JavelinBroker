@@ -38,7 +38,12 @@ export class TopicRepository {
 
     const { partitions, params } = CryptoBase64.from<{ topic: string, partitions: string[], params: TopicModelParams }>(encryptedTopic);
 
+
+
     return new TopicModel(topicName, partitions, params);
   }
-  // TODO: pushMessageToTopicMethod
+
+  async getTopicKeys(): Promise<string[]>  {
+    return (await this.cacheManager.store.keys())?.filter((key) => !key.includes('_'));
+  }
 }

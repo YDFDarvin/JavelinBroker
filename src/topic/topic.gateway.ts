@@ -34,6 +34,18 @@ export class TopicGateway {
     };
   }
 
+  @SubscribeMessage(TOPIC_EVENTS.GET_ALL)
+  async getAll(): Promise<WsResponse<WsResponseBody<any, TopicModel[]>>> {
+    return {
+      event: GLOBAL_EVENT.CONSUME,
+      data: {
+        event: TOPIC_EVENTS.GET_ALL,
+        request: null,
+        result: await this.topicService.getAllTopics(),
+      }
+    };
+  }
+
   @SubscribeMessage(TOPIC_EVENTS.DELETE)
   async delete(@MessageBody() deleteTopicDto: DeleteTopicDto): Promise<WsResponse<WsResponseBody<DeleteTopicDto, boolean>>> {
     return {

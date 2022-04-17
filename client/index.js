@@ -58,6 +58,7 @@ socket.io.on('ping', (...args) => {
   socket.emit(TOPIC_EVENTS.GET, {
     topic: 'topic2',
   });
+  socket.emit(TOPIC_EVENTS.GET_ALL);
   socket.emit(TOPIC_EVENTS.DELETE, {
     topic: 'topic1',
   });

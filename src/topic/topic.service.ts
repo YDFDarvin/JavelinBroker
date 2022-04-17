@@ -49,6 +49,18 @@ export class TopicService {
     return topicModel;
   }
 
+  async getAllTopics(): Promise<TopicModel[]> {
+    const keys: string[] = await this.topicRepository.getTopicKeys();
+
+    const topicModels: TopicModel[] = [];
+
+    for (const key of keys) {
+      topicModels.push(await this.topicRepository.getTopic(key));
+    }
+
+    return topicModels;
+  }
+
   async deleteTopic(topic: string): Promise<boolean>  {
     const topicModel: TopicModel = await this.topicRepository.getTopic(topic);
 
