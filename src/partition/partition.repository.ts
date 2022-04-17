@@ -9,6 +9,9 @@ import { DoesNotExistsException } from '../errors/does-not-exists.exception';
 export class PartitionRepository {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
+  // Default retention will be set as 5min
+  private static defaultRetention = 5 * 60 * 1000;
+
   async deletePartition(topicName: string, index: number): Promise<boolean> {
     const key = PartitionModel.generateKey(topicName, index);
 
@@ -19,14 +22,13 @@ export class PartitionRepository {
 
   async createPartition(topicName: string, index: number, retention?: number): Promise<boolean> {
     const key = PartitionModel.generateKey(topicName, index);
-    const model = new PartitionModel(key);
+    const model = new PartitionModel(key, [], retention ? retention * 1000 : PartitionRepository.defaultRetention);
 
     if (await this.cacheManager.get(key)) throw new AlreadyExistsException();
 
     const hasCreated = retention
       ? await this.cacheManager.set(key, CryptoBase64.to(model), { ttl: retention * 1000 })
-      // Default retention will be set as 5min
-      : await this.cacheManager.set(key, CryptoBase64.to(model), { ttl: 5 * 60 * 1000 });
+      : await this.cacheManager.set(key, CryptoBase64.to(model), { ttl: PartitionRepository.defaultRetention });
 
     return !!hasCreated;
   }
@@ -38,8 +40,27 @@ export class PartitionRepository {
     if (!encryptedMessages) return null;
 
     const messages: string[] = CryptoBase64.from<PartitionPOJO>(encryptedMessages)!.data;
+    const retention: number = CryptoBase64.from<PartitionPOJO>(encryptedMessages)!.retention;
 
-    return new PartitionModel(key, messages);
+    return new PartitionModel(key, messages, retention);
   }
-  // TODO: pushMessageToTopicMethod
+
+  // TODO: Handle out of Boundaries
+  async pushMessage(topicName: string, index: number, message: string) {
+    const partitionModel = await this.getPartitionByKey(topicName, index);
+
+    if (!partitionModel) throw new DoesNotExistsException();
+
+    partitionModel.pushMessage(message);
+
+    await this.deletePartition(topicName, index);
+
+    return !!await this.cacheManager.set(
+      partitionModel.getKey(),
+      CryptoBase64.to(partitionModel),
+      {
+        ttl: partitionModel.getRetention(),
+      }
+    );
+  }
 }
