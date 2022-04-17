@@ -55,4 +55,10 @@ socket.io.on('ping', (...args) => {
     topic: 'topic2',
     params: { partitions: 2, retention: 10, replicas: 0 },
   });
+  socket.emit(TOPIC_EVENTS.GET, {
+    topic: 'topic2',
+  });
+  socket.emit(TOPIC_EVENTS.DELETE, {
+    topic: 'topic1',
+  });
 });
