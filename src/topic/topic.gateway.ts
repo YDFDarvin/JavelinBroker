@@ -1,29 +1,48 @@
 import { WebSocketGateway, SubscribeMessage, MessageBody, WsResponse } from '@nestjs/websockets';
-import { GLOBAL_EVENT, TOPIC_EVENTS } from '@broker/common';
+import { GLOBAL_EVENT, TOPIC_EVENTS, WsResponseBody } from '@broker/common';
 import { TopicService } from './topic.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
+import { TopicModel } from './models/topic.model';
+import { DeleteTopicDto } from './dto/delete-topic.dto';
+import { GetTopicDto } from './dto/get-topic.dto';
 
 @WebSocketGateway()
 export class TopicGateway {
   constructor(private readonly topicService: TopicService) {}
 
-/*  @SubscribeMessage(TOPIC_EVENTS.CREATE)
-  create(@MessageBody() createTopicDto: CreateTopicDto): WsResponse {
-    return { event: GLOBAL_EVENT.CONSUME, data: this.topicService.create(createTopicDto)};
-  }
-
-  @SubscribeMessage(TOPIC_EVENTS.GET_ALL)
-  findAll(): WsResponse {
-    return { event: GLOBAL_EVENT.CONSUME, data: this.topicService.getAll()};
+  @SubscribeMessage(TOPIC_EVENTS.CREATE)
+  async create(@MessageBody() createTopicDto: CreateTopicDto): Promise<WsResponse<WsResponseBody<CreateTopicDto, boolean>>> {
+    return {
+      event: GLOBAL_EVENT.CONSUME,
+      data: {
+        event: TOPIC_EVENTS.CREATE,
+        request: createTopicDto,
+        result: await this.topicService.createTopic(createTopicDto)
+      }
+    };
   }
 
   @SubscribeMessage(TOPIC_EVENTS.GET)
-  findOne(@MessageBody() key: string): WsResponse {
-    return { event: GLOBAL_EVENT.CONSUME, data: this.topicService.findByKey(key)};
+  async get(@MessageBody() getTopicDto: GetTopicDto): Promise<WsResponse<WsResponseBody<GetTopicDto, TopicModel>>> {
+    return {
+      event: GLOBAL_EVENT.CONSUME,
+      data: {
+        event: TOPIC_EVENTS.GET,
+        request: getTopicDto,
+        result: await this.topicService.getTopic(getTopicDto.topic)
+      }
+    };
   }
 
   @SubscribeMessage(TOPIC_EVENTS.DELETE)
-  delete(@MessageBody() topic: string): WsResponse {
-    return { event: GLOBAL_EVENT.CONSUME, data: this.topicService.remove(topic)};
-  }*/
+  async delete(@MessageBody() deleteTopicDto: DeleteTopicDto): Promise<WsResponse<WsResponseBody<DeleteTopicDto, boolean>>> {
+    return {
+      event: GLOBAL_EVENT.CONSUME,
+      data: {
+        event: TOPIC_EVENTS.DELETE,
+        request: deleteTopicDto,
+        result: await this.topicService.deleteTopic(deleteTopicDto.topic)
+      }
+    };
+  }
 }

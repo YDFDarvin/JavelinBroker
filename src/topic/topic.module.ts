@@ -1,10 +1,13 @@
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { TopicService } from './topic.service';
 import { TopicGateway } from './topic.gateway';
+import { TopicRepository } from './topic.repository';
 import { PartitionModule } from '../partition/partition.module';
 
 @Module({
-  imports: [PartitionModule],
-  providers: [TopicGateway, TopicService]
+  imports: [PartitionModule, CacheModule.register({
+    isGlobal: true
+  })],
+  providers: [TopicGateway, TopicService, TopicRepository]
 })
 export class TopicModule {}
