@@ -31,4 +31,13 @@ export class PartitionService {
 
     return !!await this.partitionRepository.createPartition(topic, index, retention);
   }
+
+  // TODO: Define Array Boundaries and throw an separate Exception
+  async pushMessage(topic: string, index: number, message: string) {
+    const partition: PartitionModel = await this.partitionRepository.getPartitionByKey(topic, index);
+
+    if (!partition) throw new DoesNotExistsException();
+
+    return !!await this.partitionRepository.pushMessage(topic, index, message);
+  }
 }

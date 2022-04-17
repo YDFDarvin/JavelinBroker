@@ -38,8 +38,6 @@ export class TopicRepository {
 
     const { partitions, params } = CryptoBase64.from<{ topic: string, partitions: string[], params: TopicModelParams }>(encryptedTopic);
 
-
-
     return new TopicModel(topicName, partitions, params);
   }
 

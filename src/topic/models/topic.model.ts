@@ -29,6 +29,10 @@ export class TopicModel implements Readonly<Topic> {
     return this.params;
   }
 
+  updatePartition(partitions: string[]) {
+    this.partitions = partitions;
+  }
+
   linkPartition(partition: string) {
     this.partitions.push(partition);
   }

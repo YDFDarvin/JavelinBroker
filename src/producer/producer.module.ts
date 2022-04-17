@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { PartitionService } from '../partition/partition.service';
 import { ProducerGateway } from './producer.gateway';
 import { PartitionModule } from '../partition/partition.module';
+import { TopicModule } from '../topic/topic.module';
 
 @Module({
-  imports: [PartitionModule],
+  imports: [TopicModule, PartitionModule],
   providers: [ProducerGateway]
 })
 export class ProducerModule {}

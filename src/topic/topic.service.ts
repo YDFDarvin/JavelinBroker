@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { TopicRepository } from './topic.repository';
 import { PartitionService } from '../partition/partition.service';
@@ -7,10 +7,12 @@ import { PartitionModel, PartitionPOJO } from '../partition/models/partition.mod
 import { TopicModel } from './models/topic.model';
 import { CryptoBase64 } from '../utils/crypto';
 import { DoesNotExistsException } from '../errors/does-not-exists.exception';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class TopicService {
   constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly topicRepository: TopicRepository,
     private readonly partitionService: PartitionService
   ) {}
@@ -55,13 +57,35 @@ export class TopicService {
     const topicModels: TopicModel[] = [];
 
     for (const key of keys) {
-      topicModels.push(await this.topicRepository.getTopic(key));
+      const topic = await this.topicRepository.getTopic(key);
+
+      const partitionsWipe: PartitionModel[] = [];
+      for (const partition of topic.partitions) {
+        const { key } = CryptoBase64.from<PartitionPOJO>(partition);
+        const [_, index] = key.split('_');
+
+        const freshPartition = await this.partitionService.getPartition(topic.getTopic(), Number.parseInt(index))
+
+        partitionsWipe.push(freshPartition);
+      }
+
+      topic.updatePartition(
+        partitionsWipe.map((partition) => {
+          const partitionPOJO: PartitionPOJO = {
+            key: partition.getKey(),
+            retention: partition.getRetention(),
+            data: partition.getData(),
+          }
+          return CryptoBase64.to(partitionPOJO);
+        })
+      )
+      topicModels.push(topic);
     }
 
     return topicModels;
   }
 
-  async deleteTopic(topic: string): Promise<boolean>  {
+  async deleteTopic(topic: string): Promise<boolean> {
     const topicModel: TopicModel = await this.topicRepository.getTopic(topic);
 
     if (!topicModel) throw new DoesNotExistsException();
@@ -80,4 +104,12 @@ export class TopicService {
 
     return !!await this.topicRepository.deleteTopic(topicModel);
   }
+
+  async pushMessage(topic: string, message: any) {
+    const encryptedMessage = CryptoBase64.to(message);
+
+    // TODO: Round-Robin pushing
+    await this.partitionService.pushMessage(topic, 0, encryptedMessage);
+  }
+
 }

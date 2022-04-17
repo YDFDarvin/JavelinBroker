@@ -8,6 +8,7 @@ import { PartitionModule } from '../partition/partition.module';
   imports: [PartitionModule, CacheModule.register({
     isGlobal: true
   })],
+  exports: [TopicRepository, TopicService],
   providers: [TopicGateway, TopicService, TopicRepository]
 })
 export class TopicModule {}
