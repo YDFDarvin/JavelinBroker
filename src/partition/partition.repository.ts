@@ -1,6 +1,6 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
-import { PartitionModel } from './models/partition.model';
+import { PartitionModel, PartitionPOJO } from './models/partition.model';
 import { CryptoBase64 } from '../utils/crypto';
 import { AlreadyExistsException } from '../errors/already-exists.exception';
 import { DoesNotExistsException } from '../errors/does-not-exists.exception';
@@ -9,10 +9,10 @@ import { DoesNotExistsException } from '../errors/does-not-exists.exception';
 export class PartitionRepository {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  private async deletePartition(topicName: string, index: number): Promise<boolean> {
+  async deletePartition(topicName: string, index: number): Promise<boolean> {
     const key = PartitionModel.generateKey(topicName, index);
 
-    if (!await this.cacheManager.get(key)) return true;
+    if (!await this.cacheManager.get(key)) throw new DoesNotExistsException();
 
     return !!await this.cacheManager.del(key);
   }
@@ -37,37 +37,9 @@ export class PartitionRepository {
 
     if (!encryptedMessages) return null;
 
-    const messages: string[] = CryptoBase64.from<{ key: string, data: string[] }>(encryptedMessages)!.data;
+    const messages: string[] = CryptoBase64.from<PartitionPOJO>(encryptedMessages)!.data;
 
     return new PartitionModel(key, messages);
   }
-
-  async getAllPartitionsByTopic(topicName: string): Promise<PartitionModel[]> {
-    const availableKeys: string[] = await this.cacheManager.store.keys<string>();
-    const topicPartitions: string[] = availableKeys.filter((item) => item.includes(topicName));
-
-    const partitions: PartitionModel[] = [];
-
-    for (const partitionKey of topicPartitions) {
-      const encryptedMessages: string = await this.cacheManager.get(partitionKey);
-      if (!encryptedMessages) throw new DoesNotExistsException();
-
-      const messages: string[] = CryptoBase64.from<{ key: string, data: string[] }>(encryptedMessages)!.data;
-
-      partitions.push(new PartitionModel(partitionKey, messages));
-    }
-
-    return partitions;
-  }
-
-  async deleteAllPartitionsByTopic(topicName: string): Promise<boolean> {
-    const availableKeys: string[] = await this.cacheManager.store.keys<string>();
-    const topicPartitions: string[] = availableKeys.filter((item) => item.includes(topicName));
-
-    for (const partitionKey of topicPartitions) await this.cacheManager.del(partitionKey);
-
-    return true;
-  }
-
   // TODO: pushMessageToTopicMethod
 }

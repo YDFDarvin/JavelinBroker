@@ -1,3 +1,8 @@
+export interface PartitionPOJO {
+  key: string;
+  data: string[];
+}
+
 export class PartitionModel {
   private readonly key: string;
   private readonly data: string[];

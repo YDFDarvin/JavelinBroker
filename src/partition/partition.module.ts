@@ -5,7 +5,8 @@ import { PartitionRepository } from './partition.repository';
 @Module({
   imports: [CacheModule.register({
     isGlobal: true
-  })],
+  }),],
+  exports: [PartitionRepository, PartitionService],
   providers: [PartitionRepository, PartitionService]
 })
 export class PartitionModule {}
