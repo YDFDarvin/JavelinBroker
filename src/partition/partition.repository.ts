@@ -26,11 +26,7 @@ export class PartitionRepository {
 
     if (await this.cacheManager.get(key)) throw new AlreadyExistsException();
 
-    const hasCreated = retention
-      ? await this.cacheManager.set(key, CryptoBase64.to(model), { ttl: retention * 1000 })
-      : await this.cacheManager.set(key, CryptoBase64.to(model), { ttl: PartitionRepository.defaultRetention });
-
-    return !!hasCreated;
+    return !!await this.cacheManager.set(key, CryptoBase64.to(model), { ttl: Number.MAX_SAFE_INTEGER });
   }
 
   async getPartitionByKey(topicName: string, index: number): Promise<PartitionModel | null> {

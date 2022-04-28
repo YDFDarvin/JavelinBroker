@@ -37,8 +37,8 @@ socket.on('connect', () => {
 
 socket.on('consume', (args) => {
   console.log('\n\nConsumed EVENT: ', args.event);
-  console.log('Consumed Request: ', args.request);
-  console.log('Consumed Result: ', args.result);
+  // console.log('Consumed Request: ', args.request);
+  // console.log('Consumed Result: ', args.result);
 
   if (Array.isArray(args.result)) {
     const topic = args.result?.find((topic) => topic.topic === 'messages');

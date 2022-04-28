@@ -15,12 +15,7 @@ export class TopicRepository {
 
     if (await this.cacheManager.get(key)) throw new AlreadyExistsException();
 
-    const hasCreated = retention
-      ? await this.cacheManager.set(key, CryptoBase64.to(topic), { ttl: retention * 1000 })
-      // Default retention will be set as 5min
-      : await this.cacheManager.set(key, CryptoBase64.to(topic), { ttl: 5 * 60 * 1000 });
-
-    return !!hasCreated;
+    return !!await this.cacheManager.set(key, CryptoBase64.to(topic), { ttl: Number.MAX_SAFE_INTEGER });
   }
 
   async deleteTopic(topic: TopicModel): Promise<boolean> {

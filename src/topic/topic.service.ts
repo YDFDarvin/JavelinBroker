@@ -8,6 +8,7 @@ import { TopicModel } from './models/topic.model';
 import { CryptoBase64 } from '../utils/crypto';
 import { DoesNotExistsException } from '../errors/does-not-exists.exception';
 import { Cache } from 'cache-manager';
+import { log } from 'util';
 
 @Injectable()
 export class TopicService {
@@ -16,6 +17,17 @@ export class TopicService {
     private readonly topicRepository: TopicRepository,
     private readonly partitionService: PartitionService
   ) {}
+
+  private async getTopicPartitionKeys(topic: string): Promise<string[]> {
+    const currentTopicModel: TopicModel = await this.getTopic(topic);
+    const encodedPartitions: string[] = currentTopicModel.getPartitions();
+
+    return encodedPartitions.map((encodedPartition) => CryptoBase64.from<PartitionPOJO>(encodedPartition)!.key);
+  }
+
+  private static formatTopicToPointer(topic: string): string {
+    return `rr_pointer_${topic}`
+  }
 
   async createTopic(createTopicDto: CreateTopicDto): Promise<boolean> {
     const { topic, params } = createTopicDto;
@@ -108,8 +120,27 @@ export class TopicService {
   async pushMessage(topic: string, message: any) {
     const encryptedMessage = CryptoBase64.to(message);
 
-    // TODO: Round-Robin pushing
-    await this.partitionService.pushMessage(topic, 0, encryptedMessage);
-  }
+    const topicPointer = TopicService.formatTopicToPointer(topic);
 
+    const pointerToStore = await this.cacheManager.get<string>(topicPointer);
+    const partitionKeys = await this.getTopicPartitionKeys(topic);
+
+    // TODO: Round-Robin pushing
+    if (!pointerToStore) {
+      await this.partitionService.pushMessage(topic, 0, encryptedMessage);
+      await this.cacheManager.set(topicPointer, partitionKeys[0], { ttl: Number.MAX_SAFE_INTEGER })
+    } else {
+      const [_, index] = pointerToStore?.split('_');
+      const numericIndex = Number.parseInt(index);
+      console.log('numericIndex: ', numericIndex, partitionKeys.length);
+
+      if (numericIndex < partitionKeys.length - 1) {
+        await this.partitionService.pushMessage(topic, numericIndex + 1, encryptedMessage);
+        await this.cacheManager.set(topicPointer, partitionKeys[numericIndex + 1], { ttl: Number.MAX_SAFE_INTEGER });
+      } else {
+        await this.partitionService.pushMessage(topic, 0, encryptedMessage);
+        await this.cacheManager.set(topicPointer, partitionKeys[0], { ttl: Number.MAX_SAFE_INTEGER });
+      }
+    }
+  }
 }
