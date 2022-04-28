@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  dev:
+    container_name: data_wragling_web_portal_dev_container
+    image: bsci/data-wragling-web-portal-dev-image:1.0.0
+    build:
+      context: .
+      target: development
+      dockerfile: Dockerfile
+    command: 'yarn start'
+    env_file: .env.development
+    ports:
+      - '6543:6543'
+    volumes:
+      - .:/app
+      - /app/node_modules
+  stage:
+    container_name: data_wragling_web_portal_stage_container
+    image: bsci/data-wragling-web-portal-stage-image:1.0.0
+    build:
+      context: .
+      target: staging
+      dockerfile: Dockerfile
+    command: 'yarn prod 6541'
+    env_file: .env.staging
+    ports:
+      - '6541:6541'
+    volumes:
+      - .:/app
+      - /app/node_modules
+  prod:
+    container_name: data_wragling_web_portal_react_prod_container
+    image: bsci/data-wragling-web-portal-react-prod-image:1.0.0
+    build:
+      context: .
+      target: production
+      dockerfile: Dockerfile
+    env_file: .env.production
+    ports:
+      - '6542:6542'
