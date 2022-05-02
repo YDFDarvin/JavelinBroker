@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 // import { AxiosProvider } from './context/AxiosProvider';
 // import { AuthProvider } from './context/AuthContext';
 import { AppRoutes } from './flows/routes';
+import { WSProvider } from './context/WsContext';
 
 const App: React.FC = function () {
   const theme = createTheme();
@@ -12,7 +13,9 @@ const App: React.FC = function () {
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
-        <AppRoutes />
+        <WSProvider>
+          <AppRoutes />
+        </WSProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

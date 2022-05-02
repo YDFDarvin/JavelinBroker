@@ -2,10 +2,11 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, Paper, Toolbar } from '@mui/material';
-import { HelpOutline, ManageAccounts } from '@mui/icons-material';
+import { HelpOutline, ManageAccounts, Storage } from '@mui/icons-material';
 
 enum PagesEnum {
   Main = 'main',
+  Topic = 'topic',
 }
 
 interface SideBarIconProps {
@@ -16,6 +17,7 @@ export const SIDE_BAR_WIDTH = '15rem';
 
 const SideBarIcon: React.FC<SideBarIconProps> = function ({ iconKey }) {
   if (iconKey === PagesEnum.Main) return <ManageAccounts />;
+  if (iconKey === PagesEnum.Topic) return <Storage />;
   return <HelpOutline />;
 };
 
