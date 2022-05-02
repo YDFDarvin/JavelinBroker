@@ -3,18 +3,16 @@ import React, { useEffect, useState } from 'react';
 import { useWebSockets } from '../../context/WsContext';
 
 const TopicPage: React.FC = () => {
-  const { emit, on } = useWebSockets();
+  const { emit, on, socket } = useWebSockets();
 
   const [topics, setTopics] = useState<any[]>([]);
 
   useEffect(() => {
-    emit('findAllTopic').then((res) => {
-      console.log('res: ', res);
-      on('consume', (arg0) => {
-        console.log('Consumed EVENT', arg0);
-      }).then((response) => {
-        console.log('response: ', response);
-      });
+    socket?.emit('findAllTopic').on('consume', (arg0) => {
+      console.log('Consumed EVENT', arg0);
+      if (arg0.result) {
+        setTopics(arg0.result);
+      }
     });
   }, []);
 
@@ -33,7 +31,11 @@ const TopicPage: React.FC = () => {
         >
           Add new topic
         </Button>
+        <Button variant={'outlined'} style={{ marginRight: '15px' }} onClick={() => emit('findAllTopic')}>
+          Refresh
+        </Button>
       </Box>
+      {JSON.stringify(topics)}
     </Box>
   );
 };

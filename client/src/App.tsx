@@ -1,6 +1,7 @@
 import React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
+import { SnackbarProvider } from 'notistack';
 
 // import { AxiosProvider } from './context/AxiosProvider';
 // import { AuthProvider } from './context/AuthContext';
@@ -13,9 +14,19 @@ const App: React.FC = function () {
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
-        <WSProvider>
-          <AppRoutes />
-        </WSProvider>
+        {/*@ts-ignore*/}
+        <SnackbarProvider
+          maxSnack={3}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          autoHideDuration={5000}
+        >
+          <WSProvider>
+            <AppRoutes />
+          </WSProvider>
+        </SnackbarProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
