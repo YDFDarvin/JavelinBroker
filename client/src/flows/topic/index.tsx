@@ -1,19 +1,33 @@
 import { Box, Button } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useWebSockets } from '../../context/WsContext';
+import { TopicList } from '../components/topic';
+
+export interface TopicPOJO {
+  topic: string;
+  partitions: string[];
+  params: { partitions: number; retention: number; replicas: number };
+}
+
+interface FindAllTopicsDTO {
+  event: string;
+  request: null | string;
+  result: TopicPOJO[];
+}
 
 const TopicPage: React.FC = () => {
   const { emit, on, socket } = useWebSockets();
 
-  const [topics, setTopics] = useState<any[]>([]);
+  const [topics, setTopics] = useState<TopicPOJO[]>([]);
 
   useEffect(() => {
-    socket?.emit('findAllTopic').on('consume', (arg0) => {
-      console.log('Consumed EVENT', arg0);
-      if (arg0.result) {
-        setTopics(arg0.result);
-      }
+    socket?.emit('findAllTopic');
+
+    socket?.on('consume', (arg0: FindAllTopicsDTO) => {
+      if (arg0.result) setTopics(arg0.result);
     });
+
+    return () => {};
   }, []);
 
   return (
@@ -35,7 +49,7 @@ const TopicPage: React.FC = () => {
           Refresh
         </Button>
       </Box>
-      {JSON.stringify(topics)}
+      <TopicList topics={topics} />
     </Box>
   );
 };

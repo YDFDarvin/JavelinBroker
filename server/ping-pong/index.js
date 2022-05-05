@@ -37,10 +37,12 @@ socket.on('connect', () => {
 
 socket.on('consume', (args) => {
   console.log('\n\nConsumed EVENT: ', args.event);
+  console.log('\n ARG: ', args);
   // console.log('Consumed Request: ', args.request);
   // console.log('Consumed Result: ', args.result);
 
   if (Array.isArray(args.result)) {
+    console.log('topic: ', args.result);
     const topic = args.result?.find((topic) => topic.topic === 'messages');
     const partitions = topic.partitions?.map((partition) =>
       JSON.parse(Buffer.from(partition, 'base64').toString('utf8')),
@@ -58,7 +60,13 @@ socket.io.on('ping', (...args) => {
 
   socket.emit('produce', {
     topic: 'messages',
-    message: crypto.randomBytes(20).toString('hex'),
+    message: {
+      string: crypto.randomBytes(20).toString('hex'),
+      object: {
+        field: crypto.randomBytes(5).toString('hex'),
+        absent: null,
+      },
+    },
   });
   socket.emit(TOPIC_EVENTS.GET_ALL);
 });
