@@ -4,7 +4,10 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthenticatedRoute } from '../../components/generic/AuthenticatedRoute';
 
 import MainPage from '../main';
+
 import TopicPage from '../topic';
+import CreateTopicPage from '../topic/new';
+
 import NotFoundPage from '../notFound';
 
 export const AppRoutes: React.FC = function () {
@@ -21,7 +24,9 @@ export const AppRoutes: React.FC = function () {
 
         <Route element={<AuthenticatedRoute unauthenticated />}>
           <Route path="/main" element={<MainPage />} />
+
           <Route path="/topic" element={<TopicPage />} />
+          <Route path="/topic/new" element={<CreateTopicPage />} />
 
           <Route path="/not-found" element={<NotFoundPage />} />
           <Route path="/*" element={<NotFoundPage />} />

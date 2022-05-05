@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, List } from '@mui/material';
-import { TopicPOJO } from '../../topic';
+import { TopicPOJO } from '../../flows/topic';
 import { TopicListItem } from './TopicListItem';
 
 interface TopicListProps {
@@ -11,7 +11,7 @@ export const TopicList: React.FC<TopicListProps> = ({ topics }) => {
   return (
     <Box p={'15px'}>
       <List>
-        {topics.map((topicPOJO) => (
+        {topics?.map((topicPOJO) => (
           <TopicListItem key={topicPOJO.topic} topic={topicPOJO} />
         ))}
       </List>

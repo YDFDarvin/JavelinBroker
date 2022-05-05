@@ -1,7 +1,9 @@
-import { Box, Button } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import { Box, Button, Divider, Paper, Typography } from '@mui/material';
+import { AddCircle, Refresh } from '@mui/icons-material';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useWebSockets } from '../../context/WsContext';
-import { TopicList } from '../components/topic';
+import { TopicList } from '../../components/topic';
+import { useNavigate } from 'react-router-dom';
 
 export interface TopicPOJO {
   topic: string;
@@ -16,41 +18,57 @@ interface FindAllTopicsDTO {
 }
 
 const TopicPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const { emit, on, socket } = useWebSockets();
 
   const [topics, setTopics] = useState<TopicPOJO[]>([]);
 
   useEffect(() => {
-    socket?.emit('findAllTopic');
-
-    socket?.on('consume', (arg0: FindAllTopicsDTO) => {
-      if (arg0.result) setTopics(arg0.result);
-    });
+    findAllTopics();
 
     return () => {};
   }, []);
 
+  const findAllTopics = useCallback(() => {
+    socket?.emit('findAllTopic');
+
+    socket?.on('consume', (arg0: FindAllTopicsDTO) => {
+      if (arg0.result && arg0.event) {
+        if (arg0.event === 'findAllTopic') setTopics(arg0.result);
+      }
+    });
+  }, [socket]);
+
   return (
-    <Box p={'15px'}>
-      <Box>
-        <Button
-          variant={'outlined'}
-          style={{ marginRight: '15px' }}
-          onClick={() =>
-            emit('createTopic', {
-              topic: 'users',
-              params: { partitions: 2, retention: 10, replicas: 0 },
-            })
-          }
-        >
-          Add new topic
-        </Button>
-        <Button variant={'outlined'} style={{ marginRight: '15px' }} onClick={() => emit('findAllTopic')}>
-          Refresh
-        </Button>
+    <Paper style={{ padding: '15px', margin: '15px' }}>
+      <Box m={'15px'} display={'flex'} justifyContent={'space-between'} alignItems={'center'}>
+        <Typography variant={'h5'}>All topics</Typography>
+
+        <Box>
+          <Button
+            variant={'outlined'}
+            startIcon={<AddCircle />}
+            style={{ marginRight: '15px' }}
+            onClick={() => navigate('new')}
+          >
+            Add
+          </Button>
+          <Button
+            variant={'outlined'}
+            startIcon={<Refresh />}
+            style={{ marginRight: '15px' }}
+            onClick={() => findAllTopics()}
+          >
+            Refresh
+          </Button>
+        </Box>
       </Box>
+
+      <Divider />
+
       <TopicList topics={topics} />
-    </Box>
+    </Paper>
   );
 };
 
