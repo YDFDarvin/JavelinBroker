@@ -10,6 +10,11 @@ const TOPIC_EVENTS = {
 
 const manager = new Manager('http://localhost:3000', {
   autoConnect: true,
+  transports: ['websocket'],
+  extraHeaders: {
+    Authorization:
+      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiJ9.rFcqI_6iHyIx450Esqa3yXqyZLhPhKt9eKeHcnjYujQ',
+  },
 });
 
 const socket = manager.socket('/');

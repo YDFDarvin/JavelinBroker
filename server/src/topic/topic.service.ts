@@ -3,30 +3,36 @@ import { CreateTopicDto } from './dto/create-topic.dto';
 import { TopicRepository } from './topic.repository';
 import { PartitionService } from '../partition/partition.service';
 import { AlreadyExistsException } from '../errors/already-exists.exception';
-import { PartitionModel, PartitionPOJO } from '../partition/models/partition.model';
+import {
+  PartitionModel,
+  PartitionPOJO,
+} from '../partition/models/partition.model';
 import { TopicModel } from './models/topic.model';
 import { CryptoBase64 } from '../utils/crypto';
 import { DoesNotExistsException } from '../errors/does-not-exists.exception';
 import { Cache } from 'cache-manager';
-import { log } from 'util';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class TopicService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly topicRepository: TopicRepository,
-    private readonly partitionService: PartitionService
+    private readonly partitionService: PartitionService,
   ) {}
 
   private async getTopicPartitionKeys(topic: string): Promise<string[]> {
     const currentTopicModel: TopicModel = await this.getTopic(topic);
     const encodedPartitions: string[] = currentTopicModel.getPartitions();
 
-    return encodedPartitions.map((encodedPartition) => CryptoBase64.from<PartitionPOJO>(encodedPartition)!.key);
+    return encodedPartitions.map(
+      (encodedPartition) =>
+        CryptoBase64.from<PartitionPOJO>(encodedPartition)!.key,
+    );
   }
 
   private static formatTopicToPointer(topic: string): string {
-    return `rr_pointer_${topic}`
+    return `rr_pointer_${topic}`;
   }
 
   async createTopic(createTopicDto: CreateTopicDto): Promise<boolean> {
@@ -39,20 +45,21 @@ export class TopicService {
 
     const storedPartitions: PartitionModel[] = [];
 
-    for (let i=0; i< partitions; i++) {
+    for (let i = 0; i < partitions; i++) {
       await this.partitionService.createPartition(topic, i, retention);
 
-      const partitionModel: PartitionModel = await this.partitionService.getPartition(topic, i);
+      const partitionModel: PartitionModel =
+        await this.partitionService.getPartition(topic, i);
       storedPartitions.push(partitionModel);
     }
 
     const topicModel = new TopicModel(
       topic,
-      storedPartitions.map((partition) => (CryptoBase64.to(partition))),
-      params
+      storedPartitions.map((partition) => CryptoBase64.to(partition)),
+      params,
     );
 
-    return !!await this.topicRepository.createTopic(topicModel);
+    return !!(await this.topicRepository.createTopic(topicModel));
   }
 
   async getTopic(topic: string): Promise<TopicModel> {
@@ -76,7 +83,10 @@ export class TopicService {
         const { key } = CryptoBase64.from<PartitionPOJO>(partition);
         const [_, index] = key.split('_');
 
-        const freshPartition = await this.partitionService.getPartition(topic.getTopic(), Number.parseInt(index))
+        const freshPartition = await this.partitionService.getPartition(
+          topic.getTopic(),
+          Number.parseInt(index),
+        );
 
         partitionsWipe.push(freshPartition);
       }
@@ -87,10 +97,10 @@ export class TopicService {
             key: partition.getKey(),
             retention: partition.getRetention(),
             data: partition.getData(),
-          }
+          };
           return CryptoBase64.to(partitionPOJO);
-        })
-      )
+        }),
+      );
       topicModels.push(topic);
     }
 
@@ -105,41 +115,55 @@ export class TopicService {
     const partitions: PartitionModel[] = topicModel
       .getPartitions()
       .map((partition) => {
-        const { key, data } = (CryptoBase64.from<PartitionPOJO>(partition));
+        const { key, data } = CryptoBase64.from<PartitionPOJO>(partition);
         return new PartitionModel(key, data);
-      })
+      });
 
     for (const partition of partitions) {
       const [topicName, index] = partition.getKey().split('_');
       await this.partitionService.deletePartition(topicName, Number(index));
     }
 
-    return !!await this.topicRepository.deleteTopic(topicModel);
+    return !!(await this.topicRepository.deleteTopic(topicModel));
   }
 
   async pushMessage(topic: string, message: any) {
-    const encryptedMessage = CryptoBase64.to(message);
+    const encryptedMessage = CryptoBase64.to({
+      id: randomBytes(20).toString('hex'),
+      ctx: message,
+      createdAt: Date.now(),
+    });
 
     const topicPointer = TopicService.formatTopicToPointer(topic);
 
     const pointerToStore = await this.cacheManager.get<string>(topicPointer);
     const partitionKeys = await this.getTopicPartitionKeys(topic);
 
-    // TODO: Round-Robin pushing
     if (!pointerToStore) {
       await this.partitionService.pushMessage(topic, 0, encryptedMessage);
-      await this.cacheManager.set(topicPointer, partitionKeys[0], { ttl: Number.MAX_SAFE_INTEGER })
+      await this.cacheManager.set(topicPointer, partitionKeys[0], {
+        ttl: Number.MAX_SAFE_INTEGER,
+      });
     } else {
       const [_, index] = pointerToStore?.split('_');
       const numericIndex = Number.parseInt(index);
-      console.log('numericIndex: ', numericIndex, partitionKeys.length);
 
       if (numericIndex < partitionKeys.length - 1) {
-        await this.partitionService.pushMessage(topic, numericIndex + 1, encryptedMessage);
-        await this.cacheManager.set(topicPointer, partitionKeys[numericIndex + 1], { ttl: Number.MAX_SAFE_INTEGER });
+        await this.partitionService.pushMessage(
+          topic,
+          numericIndex + 1,
+          encryptedMessage,
+        );
+        await this.cacheManager.set(
+          topicPointer,
+          partitionKeys[numericIndex + 1],
+          { ttl: Number.MAX_SAFE_INTEGER },
+        );
       } else {
         await this.partitionService.pushMessage(topic, 0, encryptedMessage);
-        await this.cacheManager.set(topicPointer, partitionKeys[0], { ttl: Number.MAX_SAFE_INTEGER });
+        await this.cacheManager.set(topicPointer, partitionKeys[0], {
+          ttl: Number.MAX_SAFE_INTEGER,
+        });
       }
     }
   }
