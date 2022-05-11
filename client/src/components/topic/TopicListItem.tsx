@@ -1,7 +1,20 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { TopicPOJO } from '../../flows/topic';
-import { Collapse, ListItem, ListItemText, Paper, IconButton, Box, List, Badge, Divider } from '@mui/material';
-import { KeyboardArrowDown, ExpandLess, Delete } from '@mui/icons-material';
+import {
+  Collapse,
+  ListItem,
+  ListItemText,
+  Paper,
+  IconButton,
+  Box,
+  List,
+  Badge,
+  Divider,
+  Popover,
+  TextField,
+  Button,
+} from '@mui/material';
+import { KeyboardArrowDown, ExpandLess, Delete, Send } from '@mui/icons-material';
 import { TopicPartitionsList } from './TopicPartitionsList';
 import { useWebSockets } from '../../context/WsContext';
 
@@ -20,6 +33,20 @@ export const TopicListItem: React.FC<TopicListItemProps> = ({ topic }) => {
 
   const [isOpen, setIsOpen] = useState(false);
 
+  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? 'simple-popover' : undefined;
+  const [message, setMessage] = useState('');
+
   const decodedPartitions = useMemo<PartitionPOJO[]>(
     () => topic.partitions.map((partition) => JSON.parse(atob(partition)) as unknown as PartitionPOJO),
     [topic.partitions],
@@ -28,6 +55,16 @@ export const TopicListItem: React.FC<TopicListItemProps> = ({ topic }) => {
   const handleDeleteTopic = useCallback(
     () => socket?.emit('deleteTopic', { topic: topic.topic }).emit('findAllTopic'),
     [socket],
+  );
+  const handlePushTopic = useCallback(
+    () =>
+      socket
+        ?.emit('produce', {
+          topic: topic.topic,
+          message: message,
+        })
+        .emit('findAllTopic'),
+    [socket, message, topic],
   );
 
   return (
@@ -44,7 +81,44 @@ export const TopicListItem: React.FC<TopicListItemProps> = ({ topic }) => {
           </ListItem>
         </Box>
 
-        <Box mr={'15px'}>
+        <Box display={'flex'} mr={'15px'} padding={'15px'}>
+          <Button aria-describedby={'message-popover'} onClick={handleClick} variant={'outlined'}>
+            PUSH message
+          </Button>
+          <Popover
+            id={id}
+            open={open}
+            anchorEl={anchorEl}
+            onClose={handleClose}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'center',
+            }}
+            transformOrigin={{
+              vertical: 'bottom',
+              horizontal: 'center',
+            }}
+          >
+            <Box display={'flex'} style={{ margin: '5px 15px 0 5px' }}>
+              <TextField
+                id="message"
+                label="Message"
+                type="text"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                variant="outlined"
+                margin="dense"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+
+              <IconButton onClick={handlePushTopic} style={{ marginLeft: '15px' }}>
+                <Send color={'primary'} />
+              </IconButton>
+            </Box>
+          </Popover>
+
           <IconButton onClick={handleDeleteTopic}>
             <Delete color={'error'} />
           </IconButton>

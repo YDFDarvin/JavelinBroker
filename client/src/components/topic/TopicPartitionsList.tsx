@@ -32,8 +32,12 @@ export const TopicPartitionsList: React.FC<TopicPartitionsListProps> = ({ partit
           Messages:
           {partition.data?.map((message) => (
             <ListItem key={message}>
-              {/*// @ts-ignore*/}
-              <ReactJson src={JSON.parse(atob(message))} />
+              {JSON.parse(atob(message)) instanceof Object ? (
+                // @ts-ignore
+                <ReactJson src={JSON.parse(atob(message))} />
+              ) : (
+                JSON.parse(atob(message))
+              )}
             </ListItem>
           ))}
         </List>

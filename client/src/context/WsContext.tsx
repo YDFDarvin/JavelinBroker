@@ -25,6 +25,10 @@ export const WSProvider: React.FC = function ({ children }) {
     const manager = new Manager(process.env.REACT_APP_WS_API_DOMAIN, {
       autoConnect: true,
       transports: ['websocket'],
+      extraHeaders: {
+        Authorization:
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwicGFzc3dvcmQiOiJhZG1pbiJ9.rFcqI_6iHyIx450Esqa3yXqyZLhPhKt9eKeHcnjYujQ',
+      },
     });
 
     const newSocket = manager.socket('/');
