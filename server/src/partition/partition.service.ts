@@ -9,7 +9,10 @@ export class PartitionService {
   constructor(private readonly partitionRepository: PartitionRepository) {}
 
   async getPartition(topic: string, index: number): Promise<PartitionModel> {
-    const partition = await this.partitionRepository.getPartitionByKey(topic, index);
+    const partition = await this.partitionRepository.getPartitionByKey(
+      topic,
+      index,
+    );
 
     if (!partition) throw new DoesNotExistsException();
 
@@ -17,27 +20,59 @@ export class PartitionService {
   }
 
   async deletePartition(topic: string, index: number): Promise<boolean> {
-    const hasPartition = await this.partitionRepository.getPartitionByKey(topic, index);
+    const hasPartition = await this.partitionRepository.getPartitionByKey(
+      topic,
+      index,
+    );
 
     if (!hasPartition) throw new DoesNotExistsException();
 
-    return !!await this.partitionRepository.deletePartition(topic, index);
+    return !!(await this.partitionRepository.deletePartition(topic, index));
   }
 
-  async createPartition(topic: string, index: number, retention?: number): Promise<boolean> {
-    const hasPartition = await this.partitionRepository.getPartitionByKey(topic, index);
+  async createPartition(
+    topic: string,
+    index: number,
+    retention?: number,
+  ): Promise<boolean> {
+    const hasPartition = await this.partitionRepository.getPartitionByKey(
+      topic,
+      index,
+    );
 
     if (!!hasPartition) throw new AlreadyExistsException();
 
-    return !!await this.partitionRepository.createPartition(topic, index, retention);
+    return !!(await this.partitionRepository.createPartition(
+      topic,
+      index,
+      retention,
+    ));
   }
 
   // TODO: Define Array Boundaries and throw an separate Exception
   async pushMessage(topic: string, index: number, message: string) {
-    const partition: PartitionModel = await this.partitionRepository.getPartitionByKey(topic, index);
+    const partition: PartitionModel =
+      await this.partitionRepository.getPartitionByKey(topic, index);
 
     if (!partition) throw new DoesNotExistsException();
 
-    return !!await this.partitionRepository.pushMessage(topic, index, message);
+    return !!(await this.partitionRepository.pushMessage(
+      topic,
+      index,
+      message,
+    ));
+  }
+
+  async deleteMessage(topic: string, index: number, indexOfMessage: number) {
+    const partition: PartitionModel =
+      await this.partitionRepository.getPartitionByKey(topic, index);
+
+    if (!partition) throw new DoesNotExistsException();
+
+    return !!(await this.partitionRepository.deleteMessage(
+      topic,
+      index,
+      indexOfMessage,
+    ));
   }
 }

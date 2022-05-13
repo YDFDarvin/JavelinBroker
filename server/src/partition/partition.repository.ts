@@ -15,28 +15,43 @@ export class PartitionRepository {
   async deletePartition(topicName: string, index: number): Promise<boolean> {
     const key = PartitionModel.generateKey(topicName, index);
 
-    if (!await this.cacheManager.get(key)) throw new DoesNotExistsException();
+    if (!(await this.cacheManager.get(key))) throw new DoesNotExistsException();
 
-    return !!await this.cacheManager.del(key);
+    return !!(await this.cacheManager.del(key));
   }
 
-  async createPartition(topicName: string, index: number, retention?: number): Promise<boolean> {
+  async createPartition(
+    topicName: string,
+    index: number,
+    retention?: number,
+  ): Promise<boolean> {
     const key = PartitionModel.generateKey(topicName, index);
-    const model = new PartitionModel(key, [], retention ? retention * 1000 : PartitionRepository.defaultRetention);
+    const model = new PartitionModel(
+      key,
+      [],
+      retention ? retention * 1000 : PartitionRepository.defaultRetention,
+    );
 
     if (await this.cacheManager.get(key)) throw new AlreadyExistsException();
 
-    return !!await this.cacheManager.set(key, CryptoBase64.to(model), { ttl: Number.MAX_SAFE_INTEGER });
+    return !!(await this.cacheManager.set(key, CryptoBase64.to(model), {
+      ttl: Number.MAX_SAFE_INTEGER,
+    }));
   }
 
-  async getPartitionByKey(topicName: string, index: number): Promise<PartitionModel | null> {
+  async getPartitionByKey(
+    topicName: string,
+    index: number,
+  ): Promise<PartitionModel | null> {
     const key = PartitionModel.generateKey(topicName, index);
     const encryptedMessages: string = await this.cacheManager.get(key);
 
     if (!encryptedMessages) return null;
 
-    const messages: string[] = CryptoBase64.from<PartitionPOJO>(encryptedMessages)!.data;
-    const retention: number = CryptoBase64.from<PartitionPOJO>(encryptedMessages)!.retention;
+    const messages: string[] =
+      CryptoBase64.from<PartitionPOJO>(encryptedMessages)?.data;
+    const retention: number =
+      CryptoBase64.from<PartitionPOJO>(encryptedMessages)?.retention;
 
     return new PartitionModel(key, messages, retention);
   }
@@ -51,12 +66,34 @@ export class PartitionRepository {
 
     await this.deletePartition(topicName, index);
 
-    return !!await this.cacheManager.set(
+    return !!(await this.cacheManager.set(
       partitionModel.getKey(),
       CryptoBase64.to(partitionModel),
       {
         ttl: partitionModel.getRetention(),
-      }
-    );
+      },
+    ));
+  }
+
+  async deleteMessage(
+    topicName: string,
+    index: number,
+    indexOfMessage: number,
+  ) {
+    const partitionModel = await this.getPartitionByKey(topicName, index);
+
+    if (!partitionModel) throw new DoesNotExistsException();
+
+    partitionModel.deleteMessage(indexOfMessage);
+
+    await this.deletePartition(topicName, index);
+
+    return !!(await this.cacheManager.set(
+      partitionModel.getKey(),
+      CryptoBase64.to(partitionModel),
+      {
+        ttl: partitionModel.getRetention(),
+      },
+    ));
   }
 }

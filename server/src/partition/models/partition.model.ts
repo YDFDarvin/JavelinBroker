@@ -7,7 +7,7 @@ export interface PartitionPOJO {
 export class PartitionModel {
   private readonly key: string;
   private readonly retention?: number;
-  private readonly data: string[];
+  private data: string[];
 
   constructor(key: string, data?: string[], retention?: number) {
     this.key = key;
@@ -29,6 +29,10 @@ export class PartitionModel {
 
   pushMessage(message: string) {
     this.data.push(message);
+  }
+
+  deleteMessage(index: number) {
+    this.data = this.data?.filter((_, idx) => idx !== index);
   }
 
   static generateKey(key: string, index?: number) {

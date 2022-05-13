@@ -167,4 +167,46 @@ export class TopicService {
       }
     }
   }
+
+  async deleteMessage(topic: string, message: any & { id: string }) {
+    const messageId = message.id;
+
+    // Get list of partitions
+    const partitionKeys = await this.getTopicPartitionKeys(topic);
+    const partitions: PartitionModel[] = await Promise.all(
+      partitionKeys.map(
+        async (_, index) =>
+          await this.partitionService.getPartition(topic, index),
+      ),
+    );
+
+    // Find an owner of the message
+    const messageOwner: PartitionModel = partitions?.find((partition) =>
+      partition
+        .getData()
+        ?.some(
+          (encryptedMessage) =>
+            CryptoBase64.from<any & { id: string }>(encryptedMessage)?.id ===
+            messageId,
+        ),
+    );
+
+    // Find the index inside of owners data list
+    const messageIndex: number = messageOwner
+      ?.getData()
+      ?.findIndex(
+        (encryptedMessage) =>
+          CryptoBase64.from<any & { id: string }>(encryptedMessage)?.id ===
+          messageId,
+      );
+
+    // Get index of partition
+    const [_, index] = messageOwner.getKey().split('_');
+
+    await this.partitionService.deleteMessage(
+      topic,
+      Number.parseInt(index),
+      messageIndex,
+    );
+  }
 }

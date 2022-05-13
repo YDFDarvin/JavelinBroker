@@ -24,14 +24,16 @@ export class ProducerGateway {
   async handleProduce(
     @MessageBody() produceMessageDto: ProduceMessageDto,
   ): Promise<WsResponse<WsResponseBody<ProduceMessagePOJO>>> {
-    const { topic, message } = produceMessageDto;
+    const { topic, message, isDeleteAction } = produceMessageDto;
 
     return {
       event: GLOBAL_EVENT.CONSUME,
       data: {
         event: GLOBAL_EVENT.PRODUCE,
         request: { topic, message },
-        result: await this.topicService.pushMessage(topic, message),
+        result: isDeleteAction
+          ? await this.topicService.deleteMessage(topic, message)
+          : await this.topicService.pushMessage(topic, message),
       },
     };
   }
