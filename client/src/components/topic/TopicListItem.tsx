@@ -130,7 +130,7 @@ export const TopicListItem: React.FC<TopicListItemProps> = ({ topic }) => {
       <Collapse in={isOpen} unmountOnExit>
         <List>
           {decodedPartitions.map((decodedPartition) => (
-            <TopicPartitionsList key={decodedPartition.key} partition={decodedPartition} />
+            <TopicPartitionsList key={decodedPartition.key} partition={decodedPartition} topicName={topic.topic} />
           ))}
         </List>
       </Collapse>

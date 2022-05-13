@@ -1,15 +1,31 @@
-import React, { useState } from 'react';
-import { Badge, Box, Collapse, Divider, IconButton, List, ListItem, Paper } from '@mui/material';
+import React, { useCallback, useState } from 'react';
+import { Badge, Box, Button, Collapse, Divider, IconButton, List, ListItem, Paper } from '@mui/material';
 import { PartitionPOJO } from './TopicListItem';
 import { ExpandLess, KeyboardArrowDown } from '@mui/icons-material';
 import ReactJson from 'react-json-view';
+import { useWebSockets } from '../../context/WsContext';
 
 interface TopicPartitionsListProps {
   partition: PartitionPOJO;
+  topicName: string;
 }
 
-export const TopicPartitionsList: React.FC<TopicPartitionsListProps> = ({ partition }) => {
+export const TopicPartitionsList: React.FC<TopicPartitionsListProps> = ({ partition, topicName }) => {
+  const { emit, on, socket } = useWebSockets();
+
   const [isOpen, setIsOpen] = useState(false);
+
+  const onDeleteMessage = useCallback(
+    (message: any) => () =>
+      socket
+        ?.emit('produce', {
+          topic: topicName,
+          message: message,
+          isDeleteAction: true,
+        })
+        .emit('findAllTopic'),
+    [socket],
+  );
 
   return (
     <Paper variant="outlined" style={{ margin: '15px' }}>
@@ -38,6 +54,7 @@ export const TopicPartitionsList: React.FC<TopicPartitionsListProps> = ({ partit
               ) : (
                 JSON.parse(atob(message))
               )}
+              <Button onClick={onDeleteMessage(JSON.parse(atob(message)))}>Delete</Button>
             </ListItem>
           ))}
         </List>
